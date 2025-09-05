@@ -644,24 +644,83 @@ public class Gun implements INBTSerializable<NBTTagCompound>
 		}
 
 		@Override
-		public Gun deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException
+		public Gun deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException 
 		{
-			JsonObject general = JsonUtils.getJsonObject(json.getAsJsonObject(), "General");
-			this.base.general.maxAmmo = JsonUtils.getInt(general, "Max Ammo", this.base.general.maxAmmo);
-			this.base.general.reloadSpeed = JsonUtils.getInt(general, "Reload Speed", this.base.general.reloadSpeed);
-			this.base.general.projectileAmount = JsonUtils.getInt(general, "Projectile Count", this.base.general.projectileAmount);
-			this.base.general.alwaysSpread = JsonUtils.getBoolean(general, "Always Spread", this.base.general.alwaysSpread);
-			this.base.general.spread = JsonUtils.getFloat(general, "Spread", this.base.general.spread);
+			JsonObject root = json.getAsJsonObject();
 
-			JsonObject projectile = JsonUtils.getJsonObject(json.getAsJsonObject(), "Projectile");
-			this.base.projectile.damage = JsonUtils.getFloat(projectile, "Damage", this.base.projectile.damage);
-			this.base.projectile.damageReduceOverLife = JsonUtils.getBoolean(projectile, "Damage Falloff", this.base.projectile.damageReduceOverLife);
-			this.base.projectile.gravity = JsonUtils.getBoolean(projectile, "Gravity", this.base.projectile.gravity);
-			this.base.projectile.life = JsonUtils.getInt(projectile, "Ticks Before Removed", this.base.projectile.life);
-			this.base.projectile.damageReduceIfNotZoomed = JsonUtils.getBoolean(projectile, "Reduce Damage If Not Zoomed", this.base.projectile.damageReduceIfNotZoomed);
-			this.base.projectile.size = JsonUtils.getFloat(projectile, "Size", this.base.projectile.size);
-			this.base.projectile.speed = JsonUtils.getFloat(projectile, "Speed", (float) this.base.projectile.speed);
+			// ===== General =====
+			if (root.has("General")) {
+				JsonObject general = JsonUtils.getJsonObject(root, "General");
+				this.base.general.auto = JsonUtils.getBoolean(general, "Auto", this.base.general.auto);
+				this.base.general.rate = JsonUtils.getInt(general, "Rate", this.base.general.rate);
+				this.base.general.gripType = GripType.valueOf(JsonUtils.getString(general, "GripType", this.base.general.gripType.name()));
+				this.base.general.maxAmmo = JsonUtils.getInt(general, "Max Ammo", this.base.general.maxAmmo);
+				this.base.general.reloadSpeed = JsonUtils.getInt(general, "Reload Speed", this.base.general.reloadSpeed);
+				this.base.general.recoilAngle = JsonUtils.getFloat(general, "Recoil Angle", this.base.general.recoilAngle);
+				this.base.general.recoilKick = JsonUtils.getFloat(general, "Recoil Kick", this.base.general.recoilKick);
+				this.base.general.recoilDurationOffset = JsonUtils.getFloat(general, "Recoil Duration Offset", this.base.general.recoilDurationOffset);
+				this.base.general.projectileAmount = JsonUtils.getInt(general, "Projectile Count", this.base.general.projectileAmount);
+				this.base.general.alwaysSpread = JsonUtils.getBoolean(general, "Always Spread", this.base.general.alwaysSpread);
+				this.base.general.spread = JsonUtils.getFloat(general, "Spread", this.base.general.spread);
+			}
 
+			// ===== Projectile =====
+			if (root.has("Projectile")) {
+				JsonObject projectile = JsonUtils.getJsonObject(root, "Projectile");
+				this.base.projectile.damage = JsonUtils.getFloat(projectile, "Damage", this.base.projectile.damage);
+				this.base.projectile.visible = JsonUtils.getBoolean(projectile, "Visible", this.base.projectile.visible);
+				this.base.projectile.size = JsonUtils.getFloat(projectile, "Size", this.base.projectile.size);
+				this.base.projectile.speed = JsonUtils.getDouble(projectile, "Speed", this.base.projectile.speed);
+				this.base.projectile.life = JsonUtils.getInt(projectile, "Ticks Before Removed", this.base.projectile.life);
+				this.base.projectile.gravity = JsonUtils.getBoolean(projectile, "Gravity", this.base.projectile.gravity);
+				this.base.projectile.damageReduceOverLife = JsonUtils.getBoolean(projectile, "Damage Falloff", this.base.projectile.damageReduceOverLife);
+				this.base.projectile.damageReduceIfNotZoomed = JsonUtils.getBoolean(projectile, "Reduce Damage If Not Zoomed", this.base.projectile.damageReduceIfNotZoomed);
+				this.base.projectile.trailColor = JsonUtils.getInt(projectile, "Trail Color", this.base.projectile.trailColor);
+				this.base.projectile.trailLengthMultiplier = JsonUtils.getDouble(projectile, "Trail Length Multiplier", this.base.projectile.trailLengthMultiplier);
+			}
+
+			// ===== Sounds =====
+			if (root.has("Sounds")) {
+				JsonObject sounds = JsonUtils.getJsonObject(root, "Sounds");
+				this.base.sounds.fire = JsonUtils.getString(sounds, "fire", this.base.sounds.fire);
+				this.base.sounds.reload = JsonUtils.getString(sounds, "reload", this.base.sounds.reload);
+				this.base.sounds.cock = JsonUtils.getString(sounds, "cock", this.base.sounds.cock);
+				this.base.sounds.silencedFire = JsonUtils.getString(sounds, "silencedFire", this.base.sounds.silencedFire);
+			}
+
+			// ===== Modules (Zoom, Attachments…) =====
+			if (root.has("Modules")) {
+				JsonObject modules = JsonUtils.getJsonObject(root, "Modules");
+
+				if (modules.has("zoom")) {
+					JsonObject zoom = modules.getAsJsonObject("zoom");
+					if (this.base.modules.zoom == null) {
+						this.base.modules.zoom = new Modules.Zoom();
+					}
+					this.base.modules.zoom.fovModifier = JsonUtils.getFloat(zoom, "fovModifier", this.base.modules.zoom.fovModifier);
+					this.base.modules.zoom.smooth = JsonUtils.getBoolean(zoom, "smooth", this.base.modules.zoom.smooth);
+					this.base.modules.zoom.xOffset = JsonUtils.getDouble(zoom, "xOffset", this.base.modules.zoom.xOffset);
+					this.base.modules.zoom.yOffset = JsonUtils.getDouble(zoom, "yOffset", this.base.modules.zoom.yOffset);
+					this.base.modules.zoom.zOffset = JsonUtils.getDouble(zoom, "zOffset", this.base.modules.zoom.zOffset);
+				}
+
+				if (modules.has("attachments")) {
+					JsonObject attach = modules.getAsJsonObject("attachments");
+
+					if (attach.has("scope")) {
+						JsonObject scope = attach.getAsJsonObject("scope");
+						this.base.modules.attachments.scope = new Modules.Attachments.Scope();
+						this.base.modules.attachments.scope.smooth = JsonUtils.getBoolean(scope, "smooth", false);
+						this.base.modules.attachments.scope.scale = JsonUtils.getDouble(scope, "scale", 1.0);
+					}
+
+					if (attach.has("barrel")) {
+						JsonObject barrel = attach.getAsJsonObject("barrel");
+						this.base.modules.attachments.barrel = new Modules.Attachments.Barrel();
+						this.base.modules.attachments.barrel.scale = JsonUtils.getDouble(barrel, "scale", 1.0);
+					}
+				}
+			}
 			return this.base;
 		}
 	}
